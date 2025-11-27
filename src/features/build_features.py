@@ -1,7 +1,9 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
 # Так как источник пока неизвестен, ставлю болванку
 def normalize_features(user_item_matrix):
     """Нормализация пользовательских признаков"""
-    from sklearn.preprocessing import StandardScaler
     scaler = StandardScaler()
     return scaler.fit_transform(user_item_matrix)
 
