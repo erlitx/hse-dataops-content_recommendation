@@ -60,6 +60,37 @@ recommender-system/
 └── README.md
 ```
 
+## Запуск приложения
+<code>
+pip install -r requirements.txt
+</code>
+<code>
+uvicorn app.main:app --reload
+</code>
+
+## API Docs
+http://localhost:8000/docs
+
+## Тесты
+pytest tests/
+
+## Docker
+docker build -t movielens-recommender .
+docker run -p 8000:8000 movielens-recommender
+
+### Запуск
+
+# Клонировать/создать структуру
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# Тесты
+pytest tests/ -v
+
+# Docs: http://localhost:8000/docs
+
+
+
 
 # Стратегия ветвления
 
@@ -121,3 +152,31 @@ GitHub Actions pipeline (`ci/pipeline.yml`)
 
 ---
 
+MovieLens Recommender Service
+User Story
+Название: Рекомендации фильмов для пользователей стриминговых сервисов
+Как пользователь стримингового сервиса (например, Кирилл), я хочу получить персонализированные рекомендации фильмов, чтобы быстрее найти интересный контент для просмотра вечером.
+
+Сценарий использования:
+
+1. Кирилл заходит в мобильное приложение стримингового сервиса
+
+2. На главной странице видит блок "Рекомендации для вас"
+
+3. Приложение отправляет его ID на сервер рекомендаций
+
+4. Получает список из 10 фильмов с ID и получает их названия из базы
+
+5. Кирилл выбирает фильм и смотрит
+
+
+Функциональные требования
+Входные данные: JSON с полями user_id (int, ≥1), top_n (int, 1-50), model_type ("baseline"|"content")
+
+Выходные данные: JSON с полями user_id, model_type, top_n, recommendations (список movieId), count
+
+Валидация: Pydantic автоматическая валидация, 422 при ошибках
+
+Модель: Загружается MovieLens Small при старте, поддержка 2 алгоритмов
+
+Health check: GET /health всегда возвращает {"status": "ok"}
