@@ -1,0 +1,90 @@
+---
+- name: Deploy FastAPI MovieLens service
+  hosts: app
+  become: yes
+  vars:
+    app_user: ml-dev
+    app_dir: /opt/movielens_app
+    venv_dir: /opt/movielens_venv
+    service_name: movielens.service
+
+  tasks:
+    - name: Ensure app user exists
+      user:
+        name: "{{ app_user }}"
+        create_home: yes
+        shell: /bin/bash
+
+    - name: Install system packages
+      apt:
+        name:
+          - python3
+          - python3-venv
+          - python3-pip
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
+
+    - name: Copy main.py
+      copy:
+        src: ../main.py
+        dest: "{{ app_dir }}/main.py"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0644'
+
+    - name: Copy requirements.txt
+      copy:
+        src: ../requirements.txt
+        dest: "{{ app_dir }}/requirements.txt"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0644'
+
+    - name: Create virtualenv
+      command: "python3 -m venv {{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}"
+
+    - name: Install Python dependencies
+      command: "{{ venv_dir }}/bin/pip install --no-cache-dir -r {{ app_dir }}/requirements.txt"
+      become_user: "{{ app_user }}"
+
+    - name: Create systemd service
+      copy:
+        dest: /etc/systemd/system/{{ service_name }}
+        content: |
+          [Unit]
+          Description=MovieLens FastAPI service
+          After=network.target
+
+          [Service]
+          User={{ app_user }}
+          WorkingDirectory={{ app_dir }}
+          Environment=PYTHONUNBUFFERED=1
+          ExecStart={{ venv_dir }}/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - daemon-reload
+
+    - name: Enable and start service
+      systemd:
+        name: "{{ service_name }}"
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: daemon-reload
+      systemd:
+        daemon_reload: yes

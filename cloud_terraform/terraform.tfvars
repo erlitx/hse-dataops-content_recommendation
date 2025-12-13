@@ -1,0 +1,5 @@
+cloud_id       = ""
+folder_id      = ""
+ssh_public_key = ""
+vm_name        = "hse-cloud-vm"
+zone           = "ru-central1-a"
