@@ -1,0 +1,31 @@
+---
+- name: Создание директории приложения
+  file:
+    path: /opt/fastapi_app
+    state: directory
+    mode: '0755'
+
+- name: Копирование файлов приложения
+  copy:
+    src: app/  # Тут ansible ищет в папке files/
+    dest: /opt/fastapi_app/
+    mode: '0644'
+
+- name: Сборка Docker-образа
+  community.docker.docker_image:
+    build:
+      path: /opt/fastapi_app
+    name: fastapi
+    tag: latest
+    source: build
+    force_source: true # Пересборка если файлы поменялисб, чертовски важная штука
+
+- name: Запуск контейнера FastAPI
+  community.docker.docker_container:
+    name: fastapi_container
+    image: fastapi:latest
+    state: started
+    restart_policy: always
+    ports:
+      - "80:8000"
+    recreate: yes # Пересоздать контейнер, если образ обновился

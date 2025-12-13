@@ -1,0 +1,10 @@
+---
+- name: Развертывание FastAPI приложения в Docker
+  hosts: all
+  become: yes  # Выполнять задачи от имени рута, через sudo
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  
+  roles:
+    - docker
+    - fastapi_app
