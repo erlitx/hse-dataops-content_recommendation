@@ -1,0 +1,66 @@
+---
+- name: Обновление кэша приложения
+  apt:
+    update_cache: yes
+
+- name: Установка необходимых зависимостей
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-pip
+      - python3-venv # Добавление окружения на всякий случай
+    state: present
+
+- name: Создание директории для ключей apt
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Добавление GPG ключика Docker
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Добавление репозитория Docker
+  apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Установка пакетов Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+# --- Ебучий фикс, который мне все мозги сделал, так как нужен пакет для Ubuntu 24.04 (PEP 668) ---
+- name: Удаление файла блокировки PEP 668 (Hack для pip)
+  file:
+    path: /usr/lib/python3.12/EXTERNALLY-MANAGED
+    state: absent
+  ignore_errors: yes 
+# Использую ignore_errors, так как файла тупо может не быть на старых версиях
+
+- name: Установка Python-библиотеки docker через pip
+  pip:
+    name: docker
+    executable: pip3
+    state: present
+    extra_args: "--break-system-packages" 
+# Дубликат флага для надежности
+
+- name: Запуск и включение автозагрузки службы Docker
+  service:
+    name: docker
+    state: started
+    enabled: yes
