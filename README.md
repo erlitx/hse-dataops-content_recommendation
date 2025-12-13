@@ -161,7 +161,7 @@ c установкой зависимостей из requirements.txt и зап�
 
 
 ```
-docker build -t ml-app:1.0 .
+docker build -t ml-app:1.0 -f docker/Dockerfile .
 docker run --rm -p 8000:8000 ml-app:1.0
 ```
 
@@ -187,11 +187,13 @@ docker-compose down
 На финальном этапе зависимости устанавливаются из локального каталога /wheels без обращения к внешнему репозиторию.
 ```
 # Сборка оптимизированного образа
-docker build -t ml-app:1.0-slim -f Dockerfile .
+docker build -t ml-app:1.0-slim -f docker/Dockerfile_extend .
 
 # Сравнение размеров образов
 docker images | grep ml-app
 
+ml-app                                          1.0-slim                  bce6d5de5b07   54 seconds ago   2.55GB
+ml-app                                          1.0                       9fbabd9194a3   11 minutes ago   2.61GB
 
 ```
 
